@@ -1,0 +1,28 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_margin="8dp"
+    android:padding="12dp"
+    android:background="@drawable/bg_effect_item">
+
+    <!-- Tên hiệu ứng -->
+    <TextView
+        android:id="@+id/tvEffectName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Rainbow"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:textColor="#FFFFFF"
+        android:paddingBottom="6dp" />
+
+    <!-- Đường line preview -->
+    <View
+        android:id="@+id/viewColorLine"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:background="#FF0000"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="2dp"/>
+</LinearLayout>

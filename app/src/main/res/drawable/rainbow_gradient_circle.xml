@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Outer border -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#444444" />
+        </shape>
+    </item>
+
+    <!-- Rainbow gradient background -->
+    <item android:inset="1dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.5"
+                android:gradientRadius="50%"
+                android:startColor="#FF0000"
+                android:centerColor="#00FF00"
+                android:endColor="#0000FF" />
+        </shape>
+    </item>
+
+    <!-- Overlay gradient for rainbow effect -->
+    <item android:inset="1dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="linear"
+                android:startColor="#FFFF0040"
+                android:centerColor="#FF00FF40"
+                android:endColor="#0000FF" />
+        </shape>
+    </item>
+
+
+
+</layer-list>
