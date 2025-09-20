@@ -25,4 +25,14 @@
         android:background="#FF0000"
         android:layout_marginTop="4dp"
         android:layout_marginBottom="2dp"/>
+    <TextView
+        android:id="@+id/tvOrderBadge"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="12sp"
+        android:visibility="gone"
+        android:background="@drawable/bg_order_badge"/>
 </LinearLayout>
