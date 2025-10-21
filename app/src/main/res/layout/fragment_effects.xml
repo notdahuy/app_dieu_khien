@@ -6,32 +6,40 @@
     android:background="#101010"
     android:padding="8dp">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerEffects"
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="wrap_content"
+        android:background="#181818"
+        android:elevation="4dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/listEffects"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingTop="8dp"/>
+
     <LinearLayout
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:orientation="horizontal" android:padding="12dp">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="8dp">
 
         <TextView
-            android:id="@+id/tvSpeed"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Speed: 50%" android:layout_marginEnd="12dp"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Speed:"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="8dp"/>
 
         <SeekBar
-            android:id="@+id/seekSpeed"
-            android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:max="100" android:progress="50"/>
+            android:id="@+id/seekBarSpeed"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="100"
+            android:progress="50"/>
     </LinearLayout>
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerEffects"
-        android:layout_width="match_parent" android:layout_height="0dp"
-        android:layout_weight="1"/>
-
-    <Button
-        android:id="@+id/btnApply"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="Apply Selected Effects"/>
 </LinearLayout>
-

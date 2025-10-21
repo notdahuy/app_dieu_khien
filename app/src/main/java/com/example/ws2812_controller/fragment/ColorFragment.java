@@ -1,6 +1,7 @@
 package com.example.ws2812_controller.fragment;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 
@@ -22,13 +23,24 @@ import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.slider.Slider;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ColorFragment extends Fragment {
 
-    private final LedController ledController = new LedController();
-    private int lastSelectedColor;
-    private View selectedColorView = null;
+    private LedController ledController;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    private int lastSelectedColor = Color.WHITE;
+    private int currentBrightness = 80;
+    private boolean isLedOn = false;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // Khởi tạo LedController với Context
+        ledController = new LedController(requireContext());
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater,
@@ -48,62 +60,41 @@ public class ColorFragment extends Fragment {
         Slider brightness = view.findViewById(R.id.brightnessSlider);
         TextView brightnessPercentage = view.findViewById(R.id.brightnessPercentage);
 
-        // Power Switch
+        // Khởi tạo giá trị ban đầu
+        brightnessPercentage.setText(currentBrightness + "%");
+
+        // === Power Switch ===
         ledPowerSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Executors.newSingleThreadExecutor().execute(() -> {
+            isLedOn = isChecked;
+
+            executor.execute(() -> {
                 try {
                     String result = isChecked ? ledController.turnOn() : ledController.turnOff();
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(() ->
-                            Toast.makeText(getActivity(), result, Toast.LENGTH_SHORT).show()
-                        );
-                    }
+                    showToast(result);
                 } catch (IOException e) {
-//                    if (getActivity() != null) {
-//                        getActivity().runOnUiThread(() ->
-//                            Toast.makeText(getActivity(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-//                        );
-//                    }
+                    showToast(e.getMessage());
                 }
             });
         });
 
-        // Color Wheel
-        colorWheel.setColorChangeListener((selectedColor) -> {
-            // Lưu tạm màu cuối cùng mà người dùng chọn
-            lastSelectedColor = selectedColor;
+        // === Color Wheel ===
+        colorWheel.setColorChangeListener(selectedColor -> {
+            lastSelectedColor = selectedColor; // chỉ lưu tạm
             return null;
         });
 
-        // Lắng nghe sự kiện chạm/thả tay
         colorWheel.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_UP) {
-                // Khi người dùng thả tay -> lấy màu cuối cùng
-                int r = Color.red(lastSelectedColor);
-                int g = Color.green(lastSelectedColor);
-                int b = Color.blue(lastSelectedColor);
-
-                Executors.newSingleThreadExecutor().execute(() -> {
-                    try {
-                        String result = ledController.setColor(r, g, b);
-                        if (getActivity() != null) {
-                            getActivity().runOnUiThread(() ->
-                                Toast.makeText(getActivity(), result, Toast.LENGTH_SHORT).show()
-                            );
-                        }
-                    } catch (IOException e) {
-//                        if (getActivity() != null) {
-//                            getActivity().runOnUiThread(() ->
-//                                Toast.makeText(getActivity(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-//                            );
-//                        }
-                    }
-                });
+                if (!isLedOn) {
+                    showToast("Turn on LED first");
+                    return false;
+                }
+                sendCurrentColor();
             }
             return false;
         });
 
-        // Mảng lưu trữ id màu preset
+        // === Preset Colors ===
         int[] colorIds = {
             R.id.colorRed,
             R.id.colorBlue,
@@ -115,100 +106,73 @@ public class ColorFragment extends Fragment {
             R.id.colorWhite
         };
 
-
-        // Xử lý sự kiện cho màu preset
         for (int id : colorIds) {
             View colorView = view.findViewById(id);
             colorView.setOnClickListener(v -> {
-                v.setAlpha(1.0f);
-
-                // Highlight View mới
-                for (int otherId : colorIds) {
-                    View otherView = view.findViewById(otherId);
-                    if (otherView != v) { // Nếu View đó không phải là View vừa được chọn
-                        otherView.setAlpha(0.5f);
-                    }
+                if (!isLedOn) {
+                    showToast("Turn on LED first");
+                    return;
                 }
 
-                // Lưu View mới đã được chọn
-                selectedColorView = v;
+                int color = v.getBackgroundTintList() != null
+                    ? v.getBackgroundTintList().getDefaultColor()
+                    : Color.WHITE;
 
-                // Lấy màu từ view
-                int color = 0;
-                if (v.getBackgroundTintList() != null) {
-                    color = v.getBackgroundTintList().getDefaultColor();
-                }
-
-                int r = Color.red(color);
-                int g = Color.green(color);
-                int b = Color.blue(color);
-
-                Executors.newSingleThreadExecutor().execute(() -> {
-                    try {
-                        String result = ledController.setColor(r, g, b);
-                        if (getActivity() != null) {
-                            getActivity().runOnUiThread(() ->
-                                Toast.makeText(getActivity(), "Color set: " + result, Toast.LENGTH_SHORT).show()
-                            );
-                        }
-                    } catch (IOException e) {
-                        if (getActivity() != null) {
-                            getActivity().runOnUiThread(() ->
-                                Toast.makeText(getActivity(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                            );
-                        }
-                    }
-                });
+                lastSelectedColor = color;
+                colorWheel.setRgb(Color.red(color), Color.green(color), Color.blue(color));
+                sendCurrentColor();
             });
         }
 
-        // Slider value change listener to update percentage
+        // === Brightness Slider ===
         brightness.addOnChangeListener((slider, value, fromUser) -> {
             if (fromUser) {
-                int brightnessValue = (int) value;
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(() ->
-                        brightnessPercentage.setText(brightnessValue + "%")
-                    );
-                }
+                currentBrightness = (int) value;
+                brightnessPercentage.setText(currentBrightness + "%");
             }
         });
 
         brightness.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
             @Override
-            public void onStartTrackingTouch(@NonNull Slider slider) {
-                // Called when user starts touching the slider
-                slider.setCustomThumbDrawable(R.drawable.custom_thumb);
-            }
+            public void onStartTrackingTouch(@NonNull Slider slider) {}
 
             @Override
             public void onStopTrackingTouch(@NonNull Slider slider) {
-                // Called when user stops touching the slider
-                int brightnessValue = (int) slider.getValue();
+                if (!isLedOn) {
+                    showToast("Turn on LED first");
+                    return;
+                }
 
-                Executors.newSingleThreadExecutor().execute(() -> {
-                    try {
-                        String result = ledController.setBrightness(brightnessValue);
-                        if (getActivity() != null) {
-                            getActivity().runOnUiThread(() ->
-                                Toast.makeText(getActivity(), "Brightness: " + brightnessValue + "%", Toast.LENGTH_SHORT).show()
-                            );
-                        }
-                    } catch (IOException e) {
-//                        if (getActivity() != null) {
-//                            getActivity().runOnUiThread(() ->
-//                                Toast.makeText(getActivity(), "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-//                            );
-//                        }
-                    } catch (IllegalArgumentException e) {
-                        if (getActivity() != null) {
-                            getActivity().runOnUiThread(() ->
-                                Toast.makeText(getActivity(), "Invalid brightness: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                            );
-                        }
-                    }
-                });
+                currentBrightness = (int) slider.getValue();
+                sendCurrentColor();
             }
         });
+    }
+
+    private void sendCurrentColor() {
+        int r = Color.red(lastSelectedColor);
+        int g = Color.green(lastSelectedColor);
+        int b = Color.blue(lastSelectedColor);
+
+        executor.execute(() -> {
+            try {
+                String result = ledController.setColor(r, g, b, currentBrightness);
+            } catch (IOException e) {
+                showToast("Send failed: " + e.getMessage());
+            }
+        });
+    }
+
+    private void showToast(String message) {
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(() ->
+            Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show()
+        );
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        executor.shutdownNow();
     }
 }

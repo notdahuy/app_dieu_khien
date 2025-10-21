@@ -62,16 +62,19 @@
     </LinearLayout>
 
     <!-- Color Wheel -->
+
+    <!-- Color Row -->
+
     <com.github.antonpopoff.colorwheel.ColorWheel
         android:id="@+id/colorWheel"
         android:layout_width="250dp"
         android:layout_height="250dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="40dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/topRow" />
 
-    <!-- Color Row -->
     <LinearLayout
         android:id="@+id/colorRow"
         android:layout_width="wrap_content"
@@ -176,19 +179,19 @@
             android:clickable="true"
             android:focusable="true" />
 
-        <!-- Empty Slot for Adding Color -->
-        <ImageView
-            android:id="@+id/addColor"
+
+        <TextView
+            android:id="@+id/randomColor"
             android:layout_width="41dp"
             android:layout_height="41dp"
-            android:src="@drawable/ic_add"
-            android:background="@drawable/circle_button_border"
-            android:scaleType="centerInside"
-            android:padding="8dp"
+            android:background="@drawable/circle_button_random"
+            android:text="R"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:gravity="center"
             android:layout_margin="6dp"
             android:clickable="true"
-            android:focusable="true"
-            app:tint="@android:color/white" />
+            android:focusable="true" />
 
     </LinearLayout>
 
