@@ -9,30 +9,25 @@ import androidx.fragment.app.Fragment;
 import android.graphics.Insets;
 import android.os.Bundle;
 import android.view.MenuItem;
+// import android.widget.Toolbar; // Không dùng, có thể bỏ nếu không cần
 
 import com.example.ws2812_controller.fragment.ColorFragment;
 import com.example.ws2812_controller.fragment.EffectsFragment;
-import com.example.ws2812_controller.fragment.MusicFragment;
-import com.example.ws2812_controller.fragment.SettingFragment;
+import com.example.ws2812_controller.fragment.MusicFragment; // <-- THÊM IMPORT NÀY
+import com.example.ws2812_controller.fragment.TimerFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 
 public class MainActivity extends AppCompatActivity {
-
     BottomNavigationView bottomNavigationView;
-
-    private final Fragment colorFragment = new ColorFragment();
-    private final Fragment effectsFragment = new EffectsFragment();
-    private final Fragment musicFragment = new MusicFragment();
-    private final Fragment settingFragment = new SettingFragment();
-
-    private Fragment activeFragment = colorFragment; // fragment mặc định
+    // Toolbar toolbar; // Không dùng, có thể xoá nếu không setActionBar
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Nếu layout có view id=main, giữ insets như bạn đang làm
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars()).toPlatformInsets();
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -41,47 +36,51 @@ public class MainActivity extends AppCompatActivity {
 
         bottomNavigationView = findViewById(R.id.bottom_nav);
 
-        // Khởi tạo tất cả fragment, chỉ hiển thị 1
-        getSupportFragmentManager().beginTransaction()
-            .add(R.id.fragment_container, settingFragment, "settings").hide(settingFragment)
-            .add(R.id.fragment_container, effectsFragment, "effects").hide(effectsFragment)
-            .add(R.id.fragment_container, colorFragment, "color").hide(colorFragment)
-            .add(R.id.fragment_container, musicFragment, "music")
-            .commit();
+        bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                Fragment target = null;
+                int id = item.getItemId();
 
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-
-            if (id == R.id.menu_color) {
-                switchFragment(colorFragment);
-                return true;
-            } else if (id == R.id.menu_effects) {
-                switchFragment(effectsFragment);
-                return true;
-            } else if (id == R.id.menu_music) {
-                switchFragment(musicFragment);
-                return true;
-            } else if (id == R.id.menu_settings) {
-                switchFragment(settingFragment);
-                return true;
+                if (id == R.id.menu_color) {
+                    target = new ColorFragment();
+                } else if (id == R.id.menu_effects) {
+                    target = new EffectsFragment();
+                } else if (id == R.id.menu_music) {              // <-- THÊM CASE MUSIC
+                    target = new MusicFragment();
+                } else if (id == R.id.menu_timer) {
+                target = new TimerFragment();
+                }
+                if (target != null) {
+                    switchTo(target);
+                    return true;
+                }
+                return false;
             }
-
-            return false;
         });
 
-        // chọn tab mặc định
-        bottomNavigationView.setSelectedItemId(R.id.menu_color);
+        // Bấm lại cùng tab: không reload
+        bottomNavigationView.setOnItemReselectedListener(new NavigationBarView.OnItemReselectedListener() {
+            @Override public void onNavigationItemReselected(@NonNull MenuItem item) { /* no-op */ }
+        });
+
+        // Mặc định mở tab "Music" để bạn vào giao diện Music luôn (đổi sang menu_color nếu muốn)
+        if (savedInstanceState == null) {
+            switchTo(new ColorFragment());                         // hiển thị Color ngay
+            BottomNavigationView nav = findViewById(R.id.bottom_nav);
+            nav.setSelectedItemId(R.id.menu_color); // <-- vào Music ngay
+            // Nếu muốn vào Color mặc định: dùng R.id.menu_color
+        }
     }
 
-    private void switchFragment(Fragment target) {
-        if (activeFragment == target) return;
+    private void switchTo(Fragment target) {
+        Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (current != null && current.getClass() == target.getClass()) return; // đang ở đúng tab
 
         getSupportFragmentManager()
-            .beginTransaction()
-            .hide(activeFragment)
-            .show(target)
-            .commit();
-
-        activeFragment = target;
+                .beginTransaction()
+                .setReorderingAllowed(true)
+                .replace(R.id.fragment_container, target)
+                .commit();
     }
 }
