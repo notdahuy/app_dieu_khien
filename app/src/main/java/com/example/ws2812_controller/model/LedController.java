@@ -1,136 +1,182 @@
 package com.example.ws2812_controller.model;
 
 import android.content.Context;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-import android.text.format.Formatter;
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class LedController {
-    private final OkHttpClient client = new OkHttpClient();
+    private static final String TAG = "LedController";
+    private final OkHttpClient client;
     private final Context context;
 
+    // Form-urlencoded content type
+    public static final MediaType FORM_URLENCODED =
+        MediaType.parse("application/x-www-form-urlencoded");
+
+    // ESP32 AP mode default IP
+    private static final String ESP32_IP = "192.168.71.1";
+    private static final int TIMEOUT_SECONDS = 5;
+
     public LedController(Context context) {
-        this.context = context;
+        this.context = context.getApplicationContext();
+
+        // Configure OkHttp with timeouts
+        this.client = new OkHttpClient.Builder()
+            .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .build();
     }
 
-    // 🧠 Lấy IP của WiFi hiện tại
+    // Get current WiFi IP (or use hardcoded ESP32 IP)
     private String getCurrentWifiIP() {
-        WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        if (wifiManager == null) return null;
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        int ipInt = wifiInfo.getIpAddress();
-        String deviceIp = Formatter.formatIpAddress(ipInt); // ví dụ: 192.168.4.2
-        // Giả định ESP32 có IP .1 trong cùng subnet
-        if (deviceIp.contains(".")) {
-            String base = deviceIp.substring(0, deviceIp.lastIndexOf('.') + 1);
-            return base + "1"; // ví dụ -> 192.168.4.1
-        }
-        return "192.168.4.1";
+        return ESP32_IP;
     }
 
-    // 🧩 Hàm gửi POST /led?...
-    private String sendCommand(String query) throws IOException {
+    // Send command to ESP32
+    private String sendCommand(String formBody) throws IOException {
         String ip = getCurrentWifiIP();
-        if (ip == null) return "Error: cannot get WiFi IP";
+        if (ip == null) {
+            throw new IOException("Cannot get WiFi IP");
+        }
 
-        String url = "http://" + ip + "/led?" + query;
+        String url = "http://" + ip + "/led";
+
+        Log.d(TAG, "Sending to " + url + " body: " + formBody);
+
+        RequestBody body = RequestBody.create(formBody, FORM_URLENCODED);
+
         Request request = new Request.Builder()
             .url(url)
-            .post(RequestBody.create(new byte[0], null))
+            .post(body)
+            .addHeader("Content-Type", "application/x-www-form-urlencoded")
             .build();
 
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                return "Error: " + response.code();
+                String errorBody = response.body() != null ? response.body().string() : "No error body";
+                Log.e(TAG, "Request failed: " + response.code() + " - " + errorBody);
+                throw new IOException("HTTP Error: " + response.code());
             }
-            return response.body() != null ? response.body().string() : "No response";
+
+            String responseBody = response.body() != null ? response.body().string() : "{}";
+            Log.d(TAG, "Response: " + responseBody);
+            return responseBody;
+        } catch (IOException e) {
+            Log.e(TAG, "Network error: " + e.getMessage());
+            throw e;
         }
     }
 
-    // Helper: Build query string từ các tham số
-    private String buildQuery(String mode, Integer r, Integer g, Integer b, Integer brightness, Integer speed) {
+    // Build form-urlencoded body string
+    private String buildFormBody(String mode, Integer r, Integer g, Integer b,
+                                 Integer brightness, Integer speed) {
         List<String> params = new ArrayList<>();
 
-        // Thứ tự không quan trọng vì Rust parse hết trước
-        // Nhưng để dễ đọc, ta giữ theo thứ tự: color -> brightness -> speed -> mode
+        // Convert RGB to hex color (RRGGBB format)
         if (r != null && g != null && b != null) {
-            params.add("r=" + r);
-            params.add("g=" + g);
-            params.add("b=" + b);
+            String hexColor = String.format(Locale.US, "%02X%02X%02X", r, g, b);
+            params.add("color=" + hexColor);
         }
 
         if (brightness != null) {
-            params.add("brightness=" + brightness);
+            // Clamp 0-100
+            int clamped = Math.max(0, Math.min(100, brightness));
+            params.add("brightness=" + clamped);
         }
 
         if (speed != null) {
-            params.add("speed=" + speed);
+            // Clamp 1-255
+            int clamped = Math.max(1, Math.min(255, speed));
+            params.add("speed=" + clamped);
         }
 
         if (mode != null && !mode.isEmpty()) {
             params.add("mode=" + mode);
         }
 
-        return String.join("&", params);
+        // Join with &
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < params.size(); i++) {
+            sb.append(params.get(i));
+            if (i < params.size() - 1) {
+                sb.append("&");
+            }
+        }
+
+        String body = sb.toString();
+        Log.d(TAG, "Form body: " + body);
+        return body;
     }
 
-    // Bật LED (mode=on với brightness)
+    // ===== PUBLIC API METHODS =====
+
+    // Turn on LED (white, 50% brightness)
     public String turnOn() throws IOException {
-        return sendCommand(buildQuery("on", null, null, null, 150, null));
+        return sendCommand(buildFormBody("static", 255, 255, 255, 50, null));
     }
 
-    // Tắt LED
+    // Turn off LED (brightness = 0)
     public String turnOff() throws IOException {
-        return sendCommand(buildQuery("off", null, null, null, null, null));
+        return sendCommand(buildFormBody(null, null, null, null, 0, null));
     }
 
-    // Đặt màu (static mode với color)
+    // Set static color
     public String setColor(int r, int g, int b, int brightness) throws IOException {
-        // Gửi cả color, brightness và mode trong 1 request
-        return sendCommand(buildQuery("static", r, g, b, brightness, null));
+        return sendCommand(buildFormBody("static", r, g, b, brightness, null));
     }
 
-    // Hiệu ứng rainbow
-    public String setRainbow(int brightness) throws IOException {
-        return sendCommand(buildQuery("rainbow", null, null, null, brightness, null));
+    public String updateColorOnly(int r, int g, int b) throws IOException {
+        return sendCommand(buildFormBody(null, r, g, b, null, null));
     }
 
-    // Hiệu ứng blink
-    public String setBlink(int brightness, int speed) throws IOException {
-        return sendCommand(buildQuery("blink", null, null, null, brightness, speed));
+    // Rainbow effect
+    public String setEffect(String mode, int speed) throws IOException {
+        // Gửi null cho color và brightness
+        return sendCommand(buildFormBody(mode, null, null, null, null, speed));
     }
 
-    // Hiệu ứng aurora
-    public String setAurora(int brightness, int speed) throws IOException {
-        return sendCommand(buildQuery("aurora", null, null, null, brightness, speed));
-    }
 
-    // Hiệu ứng meteor
-    public String setMeteor(int brightness, int speed) throws IOException {
-        return sendCommand(buildQuery("meteor", null, null, null, brightness, speed));
-    }
-
-    // Chỉnh độ sáng (không đổi mode)
+    // Set brightness only
     public String setBrightness(int brightness) throws IOException {
-        return sendCommand(buildQuery(null, null, null, null, brightness, null));
+        return sendCommand(buildFormBody(null, null, null, null, brightness, null));
     }
 
-    // Chỉnh speed (không đổi mode)
+    // Set speed only (don't change mode)
     public String setSpeed(int speed) throws IOException {
-        return sendCommand(buildQuery(null, null, null, null, null, speed));
+        return sendCommand(buildFormBody(null, null, null, null, null, speed));
     }
 
-    // Advanced: Tùy chỉnh đầy đủ
-    public String setCustom(String mode, Integer r, Integer g, Integer b, Integer brightness, Integer speed) throws IOException {
-        return sendCommand(buildQuery(mode, r, g, b, brightness, speed));
+    // Check device status
+    public String getStatus() throws IOException {
+        String ip = getCurrentWifiIP();
+        if (ip == null) {
+            throw new IOException("Cannot get WiFi IP");
+        }
+
+        String url = "http://" + ip + "/status";
+
+        Request request = new Request.Builder()
+            .url(url)
+            .get()
+            .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("HTTP Error: " + response.code());
+            }
+            return response.body() != null ? response.body().string() : "{}";
+        }
     }
 }

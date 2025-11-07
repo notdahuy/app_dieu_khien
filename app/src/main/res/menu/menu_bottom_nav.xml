@@ -18,11 +18,6 @@
             android:icon="@drawable/ic_timer"
              />
 
-        <item
-            android:title="Music"
-            android:id="@+id/menu_music"
-            android:icon="@drawable/ic_music"
-            />
 
         <item
             android:title="Settings"

@@ -17,7 +17,7 @@ import java.util.List;
 public class EffectAdapter extends RecyclerView.Adapter<EffectAdapter.EffectViewHolder> {
 
     private final List<Effect> effects = new ArrayList<>();
-    private int selectedPosition = -1;
+    private String selectedEffectName = "static";
     private OnEffectClickListener onEffectClickListener;
 
     // Giao diện callback để fragment dễ bắt sự kiện
@@ -41,7 +41,6 @@ public class EffectAdapter extends RecyclerView.Adapter<EffectAdapter.EffectView
         if (newList != null) {
             effects.addAll(newList);
         }
-        selectedPosition = -1; // reset chọn
         notifyDataSetChanged();
     }
 
@@ -57,26 +56,29 @@ public class EffectAdapter extends RecyclerView.Adapter<EffectAdapter.EffectView
     public void onBindViewHolder(@NonNull EffectViewHolder holder, int position) {
         Effect effect = effects.get(position);
         holder.tvEffectName.setText(effect.getName());
-        holder.itemView.setTag(effect);
+//        holder.itemView.setTag(effect);
 
         // Mặc định
         holder.effectIndicator.setVisibility(View.GONE);
         holder.itemRoot.setBackgroundResource(R.drawable.item_effect_bg);
 
+        String effectApiName = effect.getName().toLowerCase().replace(" ", "");
+
         // Nếu item được chọn
-        if (position == selectedPosition) {
+        // So sánh với tên hiệu ứng đã lưu
+        if (effectApiName.equals(selectedEffectName)) {
+            // Đây là item được chọn
             holder.effectIndicator.setVisibility(View.VISIBLE);
             holder.itemRoot.setBackgroundResource(R.drawable.item_effect_active);
+        } else {
+            // Item bình thường
+            holder.effectIndicator.setVisibility(View.GONE);
+            holder.itemRoot.setBackgroundResource(R.drawable.item_effect_bg);
         }
 
         holder.itemView.setOnClickListener(v -> {
-            int oldPos = selectedPosition;
-            selectedPosition = holder.getAdapterPosition();
-
-            // Cập nhật UI cho item cũ và mới
-            if (oldPos != RecyclerView.NO_POSITION) notifyItemChanged(oldPos);
-            notifyItemChanged(selectedPosition);
-
+            // THAY ĐỔI: Adapter không tự cập nhật UI nữa
+            // Nó chỉ báo cho Fragment biết
             if (onEffectClickListener != null) {
                 onEffectClickListener.onEffectClick(effect);
             }
@@ -86,6 +88,36 @@ public class EffectAdapter extends RecyclerView.Adapter<EffectAdapter.EffectView
     @Override
     public int getItemCount() {
         return effects.size();
+    }
+
+    public void setSelectedEffect(String effectName) {
+        if (effectName == null || effectName.equals(selectedEffectName)) {
+            return; // Không có gì thay đổi
+        }
+
+        String oldSelectedName = selectedEffectName;
+        selectedEffectName = effectName;
+
+        // Tìm vị trí của 2 mục (cũ và mới) để cập nhật
+        int oldIndex = findIndexOfEffect(oldSelectedName);
+        int newIndex = findIndexOfEffect(selectedEffectName);
+
+        if (oldIndex != -1) {
+            notifyItemChanged(oldIndex);
+        }
+        if (newIndex != -1) {
+            notifyItemChanged(newIndex);
+        }
+    }
+
+    private int findIndexOfEffect(String effectApiName) {
+        for (int i = 0; i < effects.size(); i++) {
+            String apiName = effects.get(i).getName().toLowerCase().replace(" ", "");
+            if (apiName.equals(effectApiName)) {
+                return i;
+            }
+        }
+        return -1; // Không tìm thấy
     }
 
     static class EffectViewHolder extends RecyclerView.ViewHolder {
