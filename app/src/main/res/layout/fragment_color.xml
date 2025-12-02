@@ -40,7 +40,7 @@
                 android:id="@+id/wifiStatusText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Connected"
+                android:text="Đã kết nối"
 
                 android:textColor="@color/green"
                 android:textSize="18sp" />
@@ -217,7 +217,7 @@
                 android:id="@+id/brightnessLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Brightness"
+                android:text="Độ sáng"
                 android:textColor="@android:color/white"
                 android:textSize="16sp" />
 

@@ -6,6 +6,10 @@ import androidx.lifecycle.ViewModel;
 
 import android.graphics.Color;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class SharedLedViewModel extends ViewModel {
 
     // 1. Trạng thái Bật/Tắt
@@ -32,4 +36,14 @@ public class SharedLedViewModel extends ViewModel {
     private final MutableLiveData<String> currentEffect = new MutableLiveData<>("static");
     public LiveData<String> getCurrentEffect() { return currentEffect; }
     public void setCurrentEffect(String effectName) { currentEffect.setValue(effectName); }
+
+    // 6. List hiệu ứng
+    private static final List<String> NORMAL_EFFECTS = Arrays.asList(
+        "Static", "Rainbow", "Breathe", "Color Wipe",
+        "Comet", "Scanner", "Theater Chase", "Bounce"
+    );
+
+    public List<String> getNormalEffects() {
+        return new ArrayList<>(NORMAL_EFFECTS);
+    }
 }

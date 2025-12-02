@@ -1,14 +1,23 @@
 package com.example.ws2812_controller.fragment;
 
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.NumberPicker;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -16,22 +25,33 @@ import android.widget.Toast;
 import com.example.ws2812_controller.R;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
+import androidx.core.app.ShareCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
+import com.example.ws2812_controller.model.SharedLedViewModel;
 import com.example.ws2812_controller.model.TimerSchedule;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import org.json.JSONObject;
+
+import java.lang.reflect.Field;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
 
 public class TimerFragment extends Fragment {
 
     private static final String PREFS = "timer_prefs";
     private static final String KEY_SCHEDULE = "schedule_json";
 
-    private Switch swEnable;
     private CheckBox cbMon, cbTue, cbWed, cbThu, cbFri, cbSat, cbSun;
-    private TimePicker tpOn, tpOff;
-    private TextView tvSummary;
+    private LinearLayout mondayRow, tuesdayRow, wednesdayRow, thursdayRow, fridayRow, saturdayRow, sundayRow;
+    private TextView tvSummary, tvTimeOn, tvTimeOff;
     private Button btnSave, btnApply, btnAllDays, btnClearDays;
+
+    private CardView cvTimeOn, cvTimeOff;
 
     private TimerSchedule schedule;
 
@@ -50,6 +70,118 @@ public class TimerFragment extends Fragment {
         schedule = loadSchedule(requireContext());
         applyScheduleToViews(schedule);
         updateSummary();
+        setupCheckboxClickListeners();
+
+        cvTimeOn.setOnClickListener(view -> {
+            // Inflate Bottom Sheet layout
+            View bottomSheetView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.bottom_sheet_timer, null);
+
+            // Lấy các view
+            NumberPicker hourPicker = bottomSheetView.findViewById(R.id.hourPicker);
+            NumberPicker minutePicker = bottomSheetView.findViewById(R.id.minutePicker);
+            Spinner effectSpinner = bottomSheetView.findViewById(R.id.effectSpinner);
+            Button btnCancel = bottomSheetView.findViewById(R.id.btnCancel);
+            Button btnSaveTime = bottomSheetView.findViewById(R.id.btnSaveTime);
+
+            // === THÊM: Setup Spinner TRƯỚC KHI show dialog ===
+            SharedLedViewModel viewModel = new ViewModelProvider(requireActivity()).get(SharedLedViewModel.class);
+            List<String> effectNames = viewModel.getNormalEffects();
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                effectNames
+            );
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            effectSpinner.setAdapter(adapter);
+            // =================================================
+
+            // Cấu hình NumberPicker
+            hourPicker.setMinValue(0);
+            hourPicker.setMaxValue(23);
+            hourPicker.setValue(schedule.onHour); // Load giá trị đã lưu
+            hourPicker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
+
+            minutePicker.setMinValue(0);
+            minutePicker.setMaxValue(59);
+            minutePicker.setValue(schedule.onMinute); // Load giá trị đã lưu
+            minutePicker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
+
+            // Tạo BottomSheetDialog
+            BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
+            bottomSheetDialog.setContentView(bottomSheetView);
+            bottomSheetDialog.show();
+
+            // Button Hủy
+            btnCancel.setOnClickListener(cancel -> bottomSheetDialog.dismiss());
+
+            // Button Lưu
+            btnSaveTime.setOnClickListener(save -> {
+                schedule.onHour = hourPicker.getValue();
+                schedule.onMinute = minutePicker.getValue();
+                tvTimeOn.setText(String.format("%02d:%02d", schedule.onHour, schedule.onMinute));
+
+                // Lấy effect đã chọn
+                Object selected = effectSpinner.getSelectedItem();
+                String selectedEffect = (selected != null) ? selected.toString() : "";
+
+
+
+                updateSummary();
+                bottomSheetDialog.dismiss();
+            });
+        });
+
+        cvTimeOff.setOnClickListener(view -> {
+            // Inflate Bottom Sheet layout
+            View bottomSheetView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.bottom_sheet_timer, null);
+
+            // Lấy các view
+            TextView tvSheetTitle = bottomSheetView.findViewById(R.id.tvSheetTitle);
+            TextView tvSheetEffect = bottomSheetView.findViewById(R.id.tvSheetEffect);
+            NumberPicker hourPicker = bottomSheetView.findViewById(R.id.hourPicker);
+            NumberPicker minutePicker = bottomSheetView.findViewById(R.id.minutePicker);
+            Spinner effectSpinner = bottomSheetView.findViewById(R.id.effectSpinner);
+            Button btnCancel = bottomSheetView.findViewById(R.id.btnCancel);
+            Button btnSaveTime = bottomSheetView.findViewById(R.id.btnSaveTime);
+
+            tvSheetTitle.setText("Chọn thời gian tắt LED");
+            effectSpinner.setVisibility(View.GONE);
+            tvSheetEffect.setVisibility(View.GONE);
+            // Cấu hình NumberPicker
+            hourPicker.setMinValue(0);
+            hourPicker.setMaxValue(23);
+            hourPicker.setValue(schedule.offHour);
+            hourPicker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
+
+            minutePicker.setMinValue(0);
+            minutePicker.setMaxValue(59);
+            minutePicker.setValue(schedule.offMinute);
+            minutePicker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
+
+
+            // Tạo BottomSheetDialog
+            BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
+            bottomSheetDialog.setContentView(bottomSheetView);
+            bottomSheetDialog.show();
+
+            // Button Hủy
+            btnCancel.setOnClickListener(cancel -> bottomSheetDialog.dismiss());
+
+            // Button Lưu
+            btnSaveTime.setOnClickListener(save -> {
+                schedule.offHour = hourPicker.getValue();
+                schedule.offMinute = minutePicker.getValue();
+                tvTimeOff.setText(String.format("%02d:%02d", schedule.offHour, schedule.offMinute));
+
+                updateSummary();
+                bottomSheetDialog.dismiss();
+            });
+        });
+
+
 
         btnSave.setOnClickListener(view -> {
             readViewsToSchedule();
@@ -60,7 +192,6 @@ public class TimerFragment extends Fragment {
 
         btnApply.setOnClickListener(view -> {
             readViewsToSchedule();
-            // TODO: Gửi lệnh sang ESP32/Controller (MQTT/HTTP/Socket) theo giao thức của bạn
             // Ví dụ: sendTimerConfig(schedule);
             Toast.makeText(requireContext(), "Đã áp dụng (gửi cấu hình ra thiết bị)", Toast.LENGTH_SHORT).show();
             updateSummary();
@@ -71,7 +202,6 @@ public class TimerFragment extends Fragment {
     }
 
     private void bindViews(View v) {
-        swEnable = v.findViewById(R.id.swEnable);
 
         cbMon = v.findViewById(R.id.cbMon);
         cbTue = v.findViewById(R.id.cbTue);
@@ -81,20 +211,72 @@ public class TimerFragment extends Fragment {
         cbSat = v.findViewById(R.id.cbSat);
         cbSun = v.findViewById(R.id.cbSun);
 
-        tpOn = v.findViewById(R.id.tpOn);
-        tpOff = v.findViewById(R.id.tpOff);
+        // Bind các LinearLayout rows
+        mondayRow = v.findViewById(R.id.mondayRow);
+        tuesdayRow = v.findViewById(R.id.tuesdayRow);
+        wednesdayRow = v.findViewById(R.id.wednesdayRow);
+        thursdayRow = v.findViewById(R.id.thursdayRow);
+        fridayRow = v.findViewById(R.id.fridayRow);
+        saturdayRow = v.findViewById(R.id.saturdayRow);
+        sundayRow = v.findViewById(R.id.sundayRow);
 
         // TimePicker 24h
-        if (Build.VERSION.SDK_INT >= 23) {
-            tpOn.setIs24HourView(true);
-            tpOff.setIs24HourView(true);
-        }
-
+        tvTimeOn = v.findViewById(R.id.tvTimeOn);
+        tvTimeOff = v.findViewById(R.id.tvTimeOff);
+        cvTimeOn = v.findViewById(R.id.cvTimeOn);
+        cvTimeOff = v.findViewById(R.id.cvTimeOff);
         btnSave = v.findViewById(R.id.btnSave);
         btnApply = v.findViewById(R.id.btnApply);
         btnAllDays = v.findViewById(R.id.btnAllDays);
         btnClearDays = v.findViewById(R.id.btnClearDays);
         tvSummary = v.findViewById(R.id.tvSummary);
+    }
+
+    private void setupCheckboxClickListeners() {
+        // Click vào row sẽ toggle checkbox
+        mondayRow.setOnClickListener(v -> {
+            cbMon.setChecked(!cbMon.isChecked());
+            updateSummary();
+        });
+
+        tuesdayRow.setOnClickListener(v -> {
+            cbTue.setChecked(!cbTue.isChecked());
+            updateSummary();
+        });
+
+        wednesdayRow.setOnClickListener(v -> {
+            cbWed.setChecked(!cbWed.isChecked());
+            updateSummary();
+        });
+
+        thursdayRow.setOnClickListener(v -> {
+            cbThu.setChecked(!cbThu.isChecked());
+            updateSummary();
+        });
+
+        fridayRow.setOnClickListener(v -> {
+            cbFri.setChecked(!cbFri.isChecked());
+            updateSummary();
+        });
+
+        saturdayRow.setOnClickListener(v -> {
+            cbSat.setChecked(!cbSat.isChecked());
+            updateSummary();
+        });
+
+        sundayRow.setOnClickListener(v -> {
+            cbSun.setChecked(!cbSun.isChecked());
+            updateSummary();
+        });
+
+        // Cũng có thể click trực tiếp vào checkbox
+        cbMon.setOnCheckedChangeListener((buttonView, isChecked) -> updateSummary());
+        cbTue.setOnCheckedChangeListener((buttonView, isChecked) -> updateSummary());
+        cbWed.setOnCheckedChangeListener((buttonView, isChecked) -> updateSummary());
+        cbThu.setOnCheckedChangeListener((buttonView, isChecked) -> updateSummary());
+        cbFri.setOnCheckedChangeListener((buttonView, isChecked) -> updateSummary());
+        cbSat.setOnCheckedChangeListener((buttonView, isChecked) -> updateSummary());
+        cbSun.setOnCheckedChangeListener((buttonView, isChecked) -> updateSummary());
     }
 
     private void setAllDays(boolean checked) {
@@ -109,20 +291,6 @@ public class TimerFragment extends Fragment {
     }
 
     private void applyScheduleToViews(TimerSchedule t) {
-        swEnable.setChecked(t.enabled);
-
-        if (Build.VERSION.SDK_INT >= 23) {
-            tpOn.setHour(t.onHour);
-            tpOn.setMinute(t.onMinute);
-            tpOff.setHour(t.offHour);
-            tpOff.setMinute(t.offMinute);
-        } else {
-            tpOn.setCurrentHour(t.onHour);
-            tpOn.setCurrentMinute(t.onMinute);
-            tpOff.setCurrentHour(t.offHour);
-            tpOff.setCurrentMinute(t.offMinute);
-        }
-
         cbMon.setChecked(t.days[0]);
         cbTue.setChecked(t.days[1]);
         cbWed.setChecked(t.days[2]);
@@ -130,24 +298,13 @@ public class TimerFragment extends Fragment {
         cbFri.setChecked(t.days[4]);
         cbSat.setChecked(t.days[5]);
         cbSun.setChecked(t.days[6]);
+
+        // Load thời gian đã lưu
+        tvTimeOn.setText(String.format("%02d:%02d", t.onHour, t.onMinute));
+        tvTimeOff.setText(String.format("%02d:%02d", t.offHour, t.offMinute));
     }
 
     private void readViewsToSchedule() {
-        if (schedule == null) schedule = TimerSchedule.defaultOf();
-        schedule.enabled = swEnable.isChecked();
-
-        if (Build.VERSION.SDK_INT >= 23) {
-            schedule.onHour = tpOn.getHour();
-            schedule.onMinute = tpOn.getMinute();
-            schedule.offHour = tpOff.getHour();
-            schedule.offMinute = tpOff.getMinute();
-        } else {
-            schedule.onHour = tpOn.getCurrentHour();
-            schedule.onMinute = tpOn.getCurrentMinute();
-            schedule.offHour = tpOff.getCurrentHour();
-            schedule.offMinute = tpOff.getCurrentMinute();
-        }
-
         schedule.days[0] = cbMon.isChecked();
         schedule.days[1] = cbTue.isChecked();
         schedule.days[2] = cbWed.isChecked();

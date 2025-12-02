@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bottom_sheet_background"
+    android:padding="24dp">
+
+    <!-- Header với thanh kéo -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:background="#CCCCCC"
+        android:alpha="0.5"/>
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/tvSheetTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Chọn thời gian bật LED"
+        android:layout_gravity="center"
+        android:textSize="16sp"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="24dp"/>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="32dp">
+
+        <!-- Hour Section -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Giờ"
+                android:textSize="20sp"
+                android:textColor="#AAAAAA"
+                android:layout_marginBottom="8dp"/>
+
+            <NumberPicker
+                android:id="@+id/hourPicker"
+                android:layout_width="wrap_content"
+                android:layout_height="150dp"
+                android:theme="@style/NumberPickerStyle"/>
+
+        </LinearLayout>
+
+
+
+        <!-- Minute Section -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Phút"
+                android:textSize="20sp"
+                android:textColor="#AAAAAA"
+                android:layout_marginBottom="8dp"/>
+
+            <NumberPicker
+                android:id="@+id/minutePicker"
+                android:layout_width="wrap_content"
+                android:layout_height="150dp"
+                android:theme="@style/NumberPickerStyle"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Effect Section -->
+    <TextView
+        android:id="@+id/tvSheetEffect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hiệu ứng"
+        android:textSize="16sp"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="12dp"/>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="#2A2A2A"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp"
+        android:layout_marginBottom="32dp">
+
+        <Spinner
+            android:id="@+id/effectSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:spinnerMode="dropdown"
+            android:background="@android:color/transparent"/>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:text="Hủy"
+            android:textColor="#FFFFFF"
+            app:backgroundTint="#2A2A2A"
+            android:layout_marginEnd="12dp"
+            style="@style/Widget.Material3.Button.TextButton"/>
+
+        <Button
+            android:id="@+id/btnSaveTime"
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:text="Lưu"
+            android:textColor="#000000"/>
+
+    </LinearLayout>
+
+</LinearLayout>

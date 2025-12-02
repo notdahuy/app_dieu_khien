@@ -1,176 +1,354 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/black"
     android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
-
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Timer – Lặp theo ngày trong tuần"
-            android:textStyle="bold"
-            android:textSize="18sp" />
-
-        <!-- Enable/Disable toàn bộ lịch -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingTop="12dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Enable schedule" />
-
-            <Switch
-                android:id="@+id/swEnable"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="8dp"
-            android:background="#DDDDDD" />
-
-        <!-- Chọn ngày -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Chọn ngày áp dụng"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingTop="6dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <CheckBox
-                    android:id="@+id/cbMon"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Monday" />
-
-                <CheckBox
-                    android:id="@+id/cbTue"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Tuesday" />
-
-                <CheckBox
-                    android:id="@+id/cbWed"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Wednesday" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <CheckBox
-                    android:id="@+id/cbThu"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Thursday" />
-
-                <CheckBox
-                    android:id="@+id/cbFri"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Friday" />
-
-                <CheckBox
-                    android:id="@+id/cbSat"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Saturday" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingTop="4dp">
-
-                <CheckBox
-                    android:id="@+id/cbSun"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Sunday" />
-
-                <Button
-                    android:id="@+id/btnAllDays"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:text="Chọn cả tuần" />
-
-                <Button
-                    android:id="@+id/btnClearDays"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Bỏ chọn" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="12dp"
-            android:background="#DDDDDD" />
+        android:padding="12dp">
 
         <!-- Chọn giờ bật/tắt -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Thời gian BẬT"
-            android:textStyle="bold" />
+            android:text="Thời gian bật"
+            android:textSize="16sp"
+            />
 
-        <TimePicker
-            android:id="@+id/tpOn"
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cvTimeOn"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:timePickerMode="spinner" />
+            android:layout_height="100dp"
+            android:layout_margin="12dp"
+            app:cardBackgroundColor="#1E1E1E"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/tvTimeOn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="12dp"
+                    android:text="07:00"
+                    android:textSize="40sp"
+                    android:textColor="#FFFFFF"/>
+
+            </RelativeLayout>
+
+        </androidx.cardview.widget.CardView>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Thời gian TẮT"
-            android:textStyle="bold" />
+            android:text="Thời gian tắt"
+            android:textSize="16sp"
+            />
 
-        <TimePicker
-            android:id="@+id/tpOff"
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cvTimeOff"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_margin="12dp"
+            app:cardBackgroundColor="#1E1E1E"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/tvTimeOff"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="12dp"
+                    android:text="08:00"
+                    android:textSize="40sp"
+                    android:textColor="#FFFFFF"/>
+
+            </RelativeLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Chọn ngày áp dụng"
+            android:textSize="16sp"/>
+
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:timePickerMode="spinner" />
+            android:orientation="vertical">
+
+            <!-- CardView wrapper -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                app:cardBackgroundColor="#1E1E1E"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="4dp">
+
+                    <!-- Monday -->
+                    <LinearLayout
+                        android:id="@+id/mondayRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="10dp"
+                        android:paddingHorizontal="12dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Thứ Hai"
+                            android:textSize="15sp"
+                            android:textColor="@android:color/white" />
+
+                        <CheckBox
+                            android:id="@+id/cbMon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false" />
+                    </LinearLayout>
+
+                    <!-- Tuesday -->
+                    <LinearLayout
+                        android:id="@+id/tuesdayRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="10dp"
+                        android:paddingHorizontal="12dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Thứ Ba"
+                            android:textSize="15sp"
+                            android:textColor="@android:color/white" />
+
+                        <CheckBox
+                            android:id="@+id/cbTue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false" />
+                    </LinearLayout>
+
+                    <!-- Wednesday -->
+                    <LinearLayout
+                        android:id="@+id/wednesdayRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="10dp"
+                        android:paddingHorizontal="12dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Thứ Tư"
+                            android:textSize="15sp"
+                            android:textColor="@android:color/white" />
+
+                        <CheckBox
+                            android:id="@+id/cbWed"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false" />
+                    </LinearLayout>
+
+                    <!-- Thursday -->
+                    <LinearLayout
+                        android:id="@+id/thursdayRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="10dp"
+                        android:paddingHorizontal="12dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Thứ Năm"
+                            android:textSize="15sp"
+                            android:textColor="@android:color/white" />
+
+                        <CheckBox
+                            android:id="@+id/cbThu"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false" />
+                    </LinearLayout>
+
+                    <!-- Friday -->
+                    <LinearLayout
+                        android:id="@+id/fridayRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="10dp"
+                        android:paddingHorizontal="12dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Thứ Sáu"
+                            android:textSize="15sp"
+                            android:textColor="@android:color/white" />
+
+                        <CheckBox
+                            android:id="@+id/cbFri"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false" />
+                    </LinearLayout>
+
+                    <!-- Saturday -->
+                    <LinearLayout
+                        android:id="@+id/saturdayRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="10dp"
+                        android:paddingHorizontal="12dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Thứ Bảy"
+                            android:textSize="15sp"
+                            android:textColor="@android:color/white" />
+
+                        <CheckBox
+                            android:id="@+id/cbSat"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false" />
+                    </LinearLayout>
+
+                    <!-- Sunday -->
+                    <LinearLayout
+                        android:id="@+id/sundayRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="10dp"
+                        android:paddingHorizontal="12dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Chủ Nhật"
+                            android:textSize="15sp"
+                            android:textColor="@android:color/white" />
+
+                        <CheckBox
+                            android:id="@+id/cbSun"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:focusable="false" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginHorizontal="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center">
+
+                        <Button
+                            android:id="@+id/btnAllDays"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:text="Chọn tất cả"
+                            android:textSize="13sp"
+                            android:paddingVertical="10dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnClearDays"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:text="Bỏ chọn"
+                            android:textSize="13sp"
+                            app:cornerRadius="8dp"
+                            android:paddingVertical="10dp" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Quick Actions -->
+
+
+        </LinearLayout>
 
         <!-- Nút lưu / áp dụng -->
         <LinearLayout
