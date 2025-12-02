@@ -43,6 +43,7 @@
                     android:textSize="40sp"
                     android:textColor="#FFFFFF"/>
 
+
             </RelativeLayout>
 
         </androidx.cardview.widget.CardView>
@@ -346,7 +347,6 @@
             </androidx.cardview.widget.CardView>
 
             <!-- Quick Actions -->
-
 
         </LinearLayout>
 

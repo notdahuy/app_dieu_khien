@@ -60,9 +60,8 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.VH> {
         TimerSchedule it = data.get(pos);
         h.tvTimeRange.setText(String.format("%02d:%02d - %02d:%02d",
                 it.onHour, it.onMinute, it.offHour, it.offMinute));
-        h.tvDays.setText(it.daysString());
+//        h.tvDays.setText(it.daysString());
         h.sw.setOnCheckedChangeListener(null);
-        h.sw.setChecked(it.enabled);
 
         h.sw.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (listener != null) listener.onToggle(String.valueOf(it.id), isChecked);

@@ -84,7 +84,7 @@ public class TimerFragment extends Fragment {
             Button btnCancel = bottomSheetView.findViewById(R.id.btnCancel);
             Button btnSaveTime = bottomSheetView.findViewById(R.id.btnSaveTime);
 
-            // === THÊM: Setup Spinner TRƯỚC KHI show dialog ===
+            // Setup Spinner
             SharedLedViewModel viewModel = new ViewModelProvider(requireActivity()).get(SharedLedViewModel.class);
             List<String> effectNames = viewModel.getNormalEffects();
 
@@ -95,17 +95,22 @@ public class TimerFragment extends Fragment {
             );
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             effectSpinner.setAdapter(adapter);
-            // =================================================
+
+            // Set giá trị đã chọn trước đó
+            int position = effectNames.indexOf(schedule.onEffect);
+            if (position >= 0) {
+                effectSpinner.setSelection(position);
+            }
 
             // Cấu hình NumberPicker
             hourPicker.setMinValue(0);
             hourPicker.setMaxValue(23);
-            hourPicker.setValue(schedule.onHour); // Load giá trị đã lưu
+            hourPicker.setValue(schedule.onHour);
             hourPicker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
 
             minutePicker.setMinValue(0);
             minutePicker.setMaxValue(59);
-            minutePicker.setValue(schedule.onMinute); // Load giá trị đã lưu
+            minutePicker.setValue(schedule.onMinute);
             minutePicker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
 
             // Tạo BottomSheetDialog
@@ -120,12 +125,15 @@ public class TimerFragment extends Fragment {
             btnSaveTime.setOnClickListener(save -> {
                 schedule.onHour = hourPicker.getValue();
                 schedule.onMinute = minutePicker.getValue();
-                tvTimeOn.setText(String.format("%02d:%02d", schedule.onHour, schedule.onMinute));
 
-                // Lấy effect đã chọn
+                // Lưu effect đã chọn
                 Object selected = effectSpinner.getSelectedItem();
-                String selectedEffect = (selected != null) ? selected.toString() : "";
+                if (selected != null) {
+                    schedule.onEffect = selected.toString();
+                }
 
+                tvTimeOn.setText(String.format("%02d:%02d",
+                    schedule.onHour, schedule.onMinute));
 
 
                 updateSummary();
@@ -150,17 +158,17 @@ public class TimerFragment extends Fragment {
             tvSheetTitle.setText("Chọn thời gian tắt LED");
             effectSpinner.setVisibility(View.GONE);
             tvSheetEffect.setVisibility(View.GONE);
+
             // Cấu hình NumberPicker
             hourPicker.setMinValue(0);
             hourPicker.setMaxValue(23);
-            hourPicker.setValue(schedule.offHour);
+            hourPicker.setValue(schedule.offHour); // ĐÚNG: offHour
             hourPicker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
 
             minutePicker.setMinValue(0);
             minutePicker.setMaxValue(59);
-            minutePicker.setValue(schedule.offMinute);
+            minutePicker.setValue(schedule.offMinute); // ĐÚNG: offMinute
             minutePicker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
-
 
             // Tạo BottomSheetDialog
             BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
@@ -172,8 +180,9 @@ public class TimerFragment extends Fragment {
 
             // Button Lưu
             btnSaveTime.setOnClickListener(save -> {
-                schedule.offHour = hourPicker.getValue();
-                schedule.offMinute = minutePicker.getValue();
+                schedule.offHour = hourPicker.getValue();    // ĐÚNG: offHour
+                schedule.offMinute = minutePicker.getValue(); // ĐÚNG: offMinute
+
                 tvTimeOff.setText(String.format("%02d:%02d", schedule.offHour, schedule.offMinute));
 
                 updateSummary();
