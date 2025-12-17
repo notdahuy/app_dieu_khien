@@ -178,7 +178,7 @@ public class ColorFragment extends Fragment {
             // === THAY ĐỔI 2: Khi ĐỔI MÀU, chỉ cập nhật màu ===
             if (event.getAction() == MotionEvent.ACTION_UP) {
                 // debouncedSendColor(200); // Dòng cũ
-                debouncedSendColorOnly(200); // Dòng MỚI: Gửi lệnh chỉ màu (Req 2)
+                debouncedSendColorOnly(); // Dòng MỚI: Gửi lệnh chỉ màu (Req 2)
             }
             // =============================================
             return false;
@@ -239,7 +239,7 @@ public class ColorFragment extends Fragment {
             public void onStopTrackingTouch(@NonNull Slider slider) {
                 Boolean isOn = viewModel.getIsLedOn().getValue();
                 if (isOn != null && isOn) {
-                    debouncedSendBrightness(100);
+                    debouncedSendBrightness();
                 }
             }
         });
@@ -387,26 +387,26 @@ public class ColorFragment extends Fragment {
     /**
      * Debounce cho lệnh CẬP NHẬT MÀU
      */
-    private void debouncedSendColorOnly(long delayMs) {
+    private void debouncedSendColorOnly() {
         if (pendingColorUpdate != null) {
             mainHandler.removeCallbacks(pendingColorUpdate);
         }
 
         pendingColorUpdate = this::sendColorOnlyCommand; // Trỏ đến hàm MỚI
-        mainHandler.postDelayed(pendingColorUpdate, delayMs);
+        mainHandler.postDelayed(pendingColorUpdate, 200);
     }
     // ==============================================
 
     /**
      * Debounce brightness updates to prevent spam
      */
-    private void debouncedSendBrightness(long delayMs) {
+    private void debouncedSendBrightness() {
         if (pendingBrightnessUpdate != null) {
             mainHandler.removeCallbacks(pendingBrightnessUpdate);
         }
 
-        pendingColorUpdate = this::sendCurrentBrightness;
-        mainHandler.postDelayed(pendingColorUpdate, delayMs);
+        pendingBrightnessUpdate = this::sendCurrentBrightness;
+        mainHandler.postDelayed(pendingBrightnessUpdate, 100);
     }
 
     // =========================================================================

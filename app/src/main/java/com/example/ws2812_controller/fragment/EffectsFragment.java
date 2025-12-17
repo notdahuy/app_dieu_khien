@@ -136,7 +136,7 @@ public class EffectsFragment extends Fragment {
 
         // Danh sách chế độ âm thanh
         soundEffects = new ArrayList<>();
-        soundEffects.add(new Effect("VU Meter"));
+        soundEffects.add(new Effect("VU"));
         soundEffects.add(new Effect("Volume Bar"));
 
         // === THAY ĐỔI: Tạo allEffects TRƯỚC KHI gọi updateFavoriteList() ===

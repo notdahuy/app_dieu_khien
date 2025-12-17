@@ -1,6 +1,7 @@
 package com.example.ws2812_controller.model;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import java.io.IOException;
@@ -20,12 +21,16 @@ public class LedController {
     private final OkHttpClient client;
     private final Context context;
 
+    // SharedPreferences
+    private static final String PREFS_NAME = "ESP32_Prefs";
+    private static final String KEY_CURRENT_IP = "current_esp_ip";
+
     // Form-urlencoded content type
     public static final MediaType FORM_URLENCODED =
         MediaType.parse("application/x-www-form-urlencoded");
 
-    // ESP32 AP mode default IP
-    private static final String ESP32_IP = "192.168.71.1";
+    // Default IPs
+    private static final String ESP32_AP_IP = "192.168.71.1";
     private static final int TIMEOUT_SECONDS = 5;
 
     public LedController(Context context) {
@@ -39,18 +44,101 @@ public class LedController {
             .build();
     }
 
-    // Get current WiFi IP (or use hardcoded ESP32 IP)
-    private String getCurrentWifiIP() {
-        return ESP32_IP;
+    // Get current ESP32 IP from SharedPreferences
+    public String getCurrentEspIp() {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        String savedIp = prefs.getString(KEY_CURRENT_IP, "");
+
+        if (savedIp.isEmpty()) {
+            // Nếu chưa có IP lưu, trả về AP IP
+            Log.d(TAG, "No saved IP, using AP IP: " + ESP32_AP_IP);
+            return ESP32_AP_IP;
+        }
+
+        Log.d(TAG, "Using saved IP: " + savedIp);
+        return savedIp;
+    }
+
+    // Method để update IP từ SettingFragment
+    public void updateEspIp(String newIp) {
+        if (newIp != null && !newIp.isEmpty()) {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(KEY_CURRENT_IP, newIp);
+            editor.apply();
+            Log.d(TAG, "Updated ESP IP to: " + newIp);
+        }
+    }
+
+    // Kiểm tra kết nối đến IP hiện tại
+    public boolean testConnection() {
+        String ip = getCurrentEspIp();
+        String url = "http://" + ip + "/status";
+
+        OkHttpClient testClient = new OkHttpClient.Builder()
+            .connectTimeout(2, TimeUnit.SECONDS)
+            .readTimeout(2, TimeUnit.SECONDS)
+            .build();
+
+        Request request = new Request.Builder()
+            .url(url)
+            .get()
+            .build();
+
+        try (Response response = testClient.newCall(request).execute()) {
+            boolean isSuccessful = response.isSuccessful();
+            Log.d(TAG, "Connection test to " + ip + ": " + (isSuccessful ? "SUCCESS" : "FAILED"));
+            return isSuccessful;
+        } catch (IOException e) {
+            Log.d(TAG, "Connection test to " + ip + " failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Tự động fallback nếu IP hiện tại không hoạt động
+    private String getActiveEspIp() throws IOException {
+        String currentIp = getCurrentEspIp();
+
+        // Thử IP hiện tại trước
+        if (testIpConnection(currentIp)) {
+            return currentIp;
+        }
+
+        // Nếu IP hiện tại không hoạt động, thử AP IP
+        Log.w(TAG, "Current IP " + currentIp + " not responding, trying AP IP");
+        if (testIpConnection(ESP32_AP_IP)) {
+            // Lưu AP IP để lần sau dùng
+            updateEspIp(ESP32_AP_IP);
+            return ESP32_AP_IP;
+        }
+
+        // Cả hai đều không hoạt động
+        throw new IOException("Cannot connect to ESP32. Please check connection.");
+    }
+
+    private boolean testIpConnection(String ip) {
+        String url = "http://" + ip + "/status";
+
+        OkHttpClient testClient = new OkHttpClient.Builder()
+            .connectTimeout(2, TimeUnit.SECONDS)
+            .readTimeout(2, TimeUnit.SECONDS)
+            .build();
+
+        Request request = new Request.Builder()
+            .url(url)
+            .get()
+            .build();
+
+        try (Response response = testClient.newCall(request).execute()) {
+            return response.isSuccessful();
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     // Send command to ESP32
     private String sendCommand(String formBody) throws IOException {
-        String ip = getCurrentWifiIP();
-        if (ip == null) {
-            throw new IOException("Cannot get WiFi IP");
-        }
-
+        String ip = getActiveEspIp();
         String url = "http://" + ip + "/led";
 
         Log.d(TAG, "Sending to " + url + " body: " + formBody);
@@ -67,6 +155,13 @@ public class LedController {
             if (!response.isSuccessful()) {
                 String errorBody = response.body() != null ? response.body().string() : "No error body";
                 Log.e(TAG, "Request failed: " + response.code() + " - " + errorBody);
+
+                // Nếu lỗi, thử lại với AP IP
+                if (!ip.equals(ESP32_AP_IP)) {
+                    Log.d(TAG, "Retrying with AP IP");
+                    updateEspIp(ESP32_AP_IP);
+                    throw new IOException("Connection lost, switched to AP mode");
+                }
                 throw new IOException("HTTP Error: " + response.code());
             }
 
@@ -75,7 +170,14 @@ public class LedController {
             return responseBody;
         } catch (IOException e) {
             Log.e(TAG, "Network error: " + e.getMessage());
-            throw e;
+
+            // Thử lại với AP IP nếu chưa phải
+            if (!ip.equals(ESP32_AP_IP)) {
+                Log.d(TAG, "Retrying with AP IP");
+                updateEspIp(ESP32_AP_IP);
+                // Có thể thử gửi lại command với AP IP ở đây nếu muốn
+            }
+            throw new IOException("Network error: " + e.getMessage());
         }
     }
 
@@ -107,6 +209,10 @@ public class LedController {
         }
 
         // Join with &
+        if (params.isEmpty()) {
+            return ""; // Không có param nào
+        }
+
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < params.size(); i++) {
             sb.append(params.get(i));
@@ -143,10 +249,8 @@ public class LedController {
 
     // Rainbow effect
     public String setEffect(String mode, int speed) throws IOException {
-        // Gửi null cho color và brightness
         return sendCommand(buildFormBody(mode, null, null, null, null, speed));
     }
-
 
     // Set brightness only
     public String setBrightness(int brightness) throws IOException {
@@ -160,11 +264,7 @@ public class LedController {
 
     // Check device status
     public String getStatus() throws IOException {
-        String ip = getCurrentWifiIP();
-        if (ip == null) {
-            throw new IOException("Cannot get WiFi IP");
-        }
-
+        String ip = getActiveEspIp();
         String url = "http://" + ip + "/status";
 
         Request request = new Request.Builder()
@@ -178,5 +278,17 @@ public class LedController {
             }
             return response.body() != null ? response.body().string() : "{}";
         }
+    }
+
+    // Phương thức helper để kiểm tra xem có đang kết nối WiFi không
+    public boolean isConnectedToWifi() {
+        String ip = getCurrentEspIp();
+        return ip != null && !ip.isEmpty() && !ip.equals(ESP32_AP_IP);
+    }
+
+    // Reset về AP mode
+    public void resetToApMode() {
+        updateEspIp(ESP32_AP_IP);
+        Log.d(TAG, "Reset to AP mode");
     }
 }
